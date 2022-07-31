@@ -1,5 +1,9 @@
 import { Request, Response } from "express";
 import knexConnection from "../database/connection";
+import multer from "multer";
+import multerConfig from "../config/multer";
+
+export const upload = multer(multerConfig);
 
 class LocationsController {
   async index(req: Request, res: Response) {
@@ -86,6 +90,22 @@ class LocationsController {
       id: location_id,
       ...location,
     });
+  }
+
+  async update(req: Request, res: Response) {
+    const { id } = req.params;
+    const image = req.file?.filename;
+    const location = await knexConnection("locations").where("id", id).first();
+
+    if (!location) {
+      return res.status(400).json({ error: "Location not found!" });
+    }
+
+    await knexConnection("locations")
+      .update({ ...location, image })
+      .where("id", id);
+
+    return res.json(location);
   }
 }
 
